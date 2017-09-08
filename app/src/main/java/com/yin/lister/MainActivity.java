@@ -9,6 +9,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -29,9 +30,10 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-            EditText newItem = (EditText) findViewById(R.id.new_item_text);
-            addToList(newItem.getText().toString());
-            newItem.setText("");
+                EditText newItem = (EditText) findViewById(R.id.new_item_text);
+                Log.i("LISTER:", "Adding [" + newItem.getText().toString() + "] to table");
+                addToList(newItem.getText().toString());
+                newItem.setText("");
             }
         });
 
@@ -51,7 +53,9 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.hasChildren()) {
+                            Log.i("LISTER:", "Removing [" + dataSnapshot.getValue(String.class) + "] from firebase db");
                             DataSnapshot firstChild = dataSnapshot.getChildren().iterator().next();
+                            Toast.makeText(getApplicationContext(), "Removing " + firstChild.getRef(), Toast.LENGTH_LONG).show();
                             firstChild.getRef().removeValue();
                         }
                     }
@@ -73,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
         listRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
+                Log.d("LISTER:", "Adding [" + dataSnapshot.getValue(String.class) + "] to table due to firebase add");
                 adapter.add(dataSnapshot.getValue(String.class));
             }
 
@@ -81,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
+                Log.d("LISTER:", "Removing [" + dataSnapshot.getValue(String.class) + "] from table due to firebase remove");
                 String value = dataSnapshot.getValue(String.class);
                 adapter.remove(value);
             }
@@ -99,9 +105,10 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Adds the string to the Firebase list
-     * @param str
+     * @param str Value to add to firebase list
      */
     private void addToList(String str) {
+        Log.d("LISTER:", "Adding [" + str + "] to list");
         listRef.push().setValue(str);
     }
 
