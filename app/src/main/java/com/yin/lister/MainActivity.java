@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -19,12 +20,23 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 public class MainActivity extends AppCompatActivity {
     private DatabaseReference listRef;
+    private SimpleDateFormat dateFormat;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+
+        final ListView itemsView = (ListView) findViewById(R.id.items);
+        final ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, android.R.id.text1);
+        itemsView.setAdapter(adapter);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -34,12 +46,9 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("LISTER:", "Adding [" + newItem.getText().toString() + "] to table");
                 addToList(newItem.getText().toString());
                 newItem.setText("");
+                adapter.add(newItem.getText().toString());
             }
         });
-
-        final ListView itemsView = (ListView) findViewById(R.id.items);
-        final ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, android.R.id.text1);
-        itemsView.setAdapter(adapter);
 
         itemsView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 
@@ -52,12 +61,18 @@ public class MainActivity extends AppCompatActivity {
                 myQuery.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.hasChildren()) {
-                            Log.i("LISTER:", "Removing [" + dataSnapshot.getValue(String.class) + "] from firebase db");
-                            DataSnapshot firstChild = dataSnapshot.getChildren().iterator().next();
-                            Toast.makeText(getApplicationContext(), "Removing " + firstChild.getRef(), Toast.LENGTH_LONG).show();
-                            firstChild.getRef().removeValue();
-                        }
+                        ListItem item = dataSnapshot.getValue(ListItem.class);
+                        Log.i("LISTER:", "Removing [" + item.getItemName() + "] from firebase db");
+                        Toast.makeText(getApplicationContext(), "Removing " + item.getItemName(), Toast.LENGTH_LONG).show();
+                        adapter.remove(item.getItemName());
+                        // remove from firebase
+                        listRef.child(item.getItemName()).removeValue();
+//                        if (dataSnapshot.hasChildren()) {
+//                            DataSnapshot firstChild = dataSnapshot.getChildren().iterator().next();
+//                            Log.i("LISTER:", "Removing [" + firstChild.getValue(ListItem.class).getItemName() + "] from firebase db");
+//                            Toast.makeText(getApplicationContext(), "Removing " + firstChild.getValue(ListItem.class).getItemName(), Toast.LENGTH_LONG).show();
+//                            firstChild.getRef().removeValue();
+//                        }
                     }
 
                     @Override
@@ -70,15 +85,16 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // attach listener for changes to list
-        DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
-        listRef = rootRef.child("listItems");
+        listRef = FirebaseDatabase.getInstance().getReference();
+        listRef = listRef.getRoot();
 
         // Add listener to sync the firebase db with the listview
         listRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
-                Log.d("LISTER:", "Adding [" + dataSnapshot.getValue(String.class) + "] to table due to firebase add");
-                adapter.add(dataSnapshot.getValue(String.class));
+                Log.d("LISTER:", "Adding [" + dataSnapshot.getValue(ListItem.class).getItemName() + "] to table due to firebase add");
+                Toast.makeText(getApplicationContext(), "Adding " + dataSnapshot.getValue(ListItem.class).getItemName(), Toast.LENGTH_LONG).show();
+                adapter.add(dataSnapshot.getValue(ListItem.class).getItemName());
             }
 
             @Override
@@ -86,8 +102,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                Log.d("LISTER:", "Removing [" + dataSnapshot.getValue(String.class) + "] from table due to firebase remove");
-                String value = dataSnapshot.getValue(String.class);
+                Log.d("LISTER:", "Removing [" + dataSnapshot.getValue(ListItem.class).getItemName() + "] from table due to firebase remove");
+                String value = dataSnapshot.getValue(ListItem.class).getItemName();
                 adapter.remove(value);
             }
 
@@ -109,7 +125,13 @@ public class MainActivity extends AppCompatActivity {
      */
     private void addToList(String str) {
         Log.d("LISTER:", "Adding [" + str + "] to list");
-        listRef.push().setValue(str);
+
+        ListItem item = new ListItem();
+        item.setItemName(str);
+        item.setAddedDate(dateFormat.format(new Date()));
+        item.setAddedBy(FirebaseAuth.getInstance().getCurrentUser().getEmail());
+
+        listRef.child(str).setValue(item);
     }
 
 }
