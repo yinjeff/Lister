@@ -43,10 +43,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 EditText newItem = (EditText) findViewById(R.id.new_item_text);
-                Log.i("LISTER:", "Adding [" + newItem.getText().toString() + "] to table");
+                Log.d("LISTER:", "Adding [" + newItem.getText().toString() + "] due to manual add");
                 addToList(newItem.getText().toString());
                 newItem.setText("");
-                adapter.add(newItem.getText().toString());
             }
         });
 
@@ -55,24 +54,20 @@ public class MainActivity extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> parent, View view,
                                     int position, long id) {
 
-                Query myQuery = listRef.orderByValue().equalTo((String)
+                Query myQuery = listRef.orderByKey().equalTo((String)
                         itemsView.getItemAtPosition(position));
+
+                final int pos = position;
 
                 myQuery.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        ListItem item = dataSnapshot.getValue(ListItem.class);
-                        Log.i("LISTER:", "Removing [" + item.getItemName() + "] from firebase db");
-                        Toast.makeText(getApplicationContext(), "Removing " + item.getItemName(), Toast.LENGTH_LONG).show();
-                        adapter.remove(item.getItemName());
-                        // remove from firebase
-                        listRef.child(item.getItemName()).removeValue();
-//                        if (dataSnapshot.hasChildren()) {
-//                            DataSnapshot firstChild = dataSnapshot.getChildren().iterator().next();
-//                            Log.i("LISTER:", "Removing [" + firstChild.getValue(ListItem.class).getItemName() + "] from firebase db");
-//                            Toast.makeText(getApplicationContext(), "Removing " + firstChild.getValue(ListItem.class).getItemName(), Toast.LENGTH_LONG).show();
-//                            firstChild.getRef().removeValue();
-//                        }
+                        if (dataSnapshot.hasChildren()) {
+                            DataSnapshot firstChild = dataSnapshot.getChildren().iterator().next();
+                            ListItem item = firstChild.getValue(ListItem.class);
+                            Log.d("LISTER:", "Removing [" + item.getItemName() + "] from firebase db due to long click");
+                            firstChild.getRef().removeValue();
+                        }
                     }
 
                     @Override
@@ -93,8 +88,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
                 Log.d("LISTER:", "Adding [" + dataSnapshot.getValue(ListItem.class).getItemName() + "] to table due to firebase add");
-                Toast.makeText(getApplicationContext(), "Adding " + dataSnapshot.getValue(ListItem.class).getItemName(), Toast.LENGTH_LONG).show();
                 adapter.add(dataSnapshot.getValue(ListItem.class).getItemName());
+                Toast.makeText(getApplicationContext(), "Added " + dataSnapshot.getValue(ListItem.class).getItemName(), Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -105,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("LISTER:", "Removing [" + dataSnapshot.getValue(ListItem.class).getItemName() + "] from table due to firebase remove");
                 String value = dataSnapshot.getValue(ListItem.class).getItemName();
                 adapter.remove(value);
+                Toast.makeText(getApplicationContext(), "Removed " + dataSnapshot.getValue(ListItem.class).getItemName(), Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -114,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCancelled(DatabaseError error) {
                 // Failed to read value
-                Log.i("TAG:", "Failed to read value.", error.toException());
+                Log.e("TAG:", "Failed to read value.", error.toException());
             }
         });
     }

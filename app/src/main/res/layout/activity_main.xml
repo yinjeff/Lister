@@ -7,9 +7,11 @@
     tools:context="com.yin.lister.MainActivity">
 
     <android.support.design.widget.AppBarLayout
+        android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
+        android:theme="@style/AppTheme.AppBarOverlay"
+        app:layout_behavior="@string/app_name">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
@@ -43,6 +45,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="50dp"
-        />
+        android:layout_marginTop="55dp"
+        android:footerDividersEnabled="false"
+        android:headerDividersEnabled="false" />
 
 </android.support.design.widget.CoordinatorLayout>
