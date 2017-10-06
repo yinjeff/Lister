@@ -43,8 +43,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 EditText newItem = (EditText) findViewById(R.id.new_item_text);
-                Log.d("LISTER:", "Adding [" + newItem.getText().toString() + "] due to manual add");
-                addToList(newItem.getText().toString());
+                if (newItem.getText() != null && !"".equals(newItem.getText().toString().trim())) {
+                    Log.d("LISTER:", "Adding [" + newItem.getText().toString() + "] due to manual add");
+                    addToList(newItem.getText().toString());
+                }
                 newItem.setText("");
             }
         });
