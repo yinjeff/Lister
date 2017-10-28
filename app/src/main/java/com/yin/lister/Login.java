@@ -24,7 +24,7 @@ public class Login extends AppCompatActivity {
         FirebaseAuth auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() != null) {
             // already signed in
-            startActivity(new Intent(Login.this, MainActivity.class));
+            startActivity(new Intent(Login.this, ListActivity.class));
             finish();
         } else {
             // not signed in
@@ -46,7 +46,7 @@ public class Login extends AppCompatActivity {
             IdpResponse response = IdpResponse.fromResultIntent(data);
             // Successfully signed in
             if (resultCode == ResultCodes.OK) {
-                startActivity(new Intent(Login.this,MainActivity.class));
+                startActivity(new Intent(Login.this, ListActivity.class));
                 finish();
                 return;
             } else {

@@ -1,20 +1,20 @@
-package com.yin.lister;
+package com.yin.lister.obj;
 
 /**
- * Created by jyin on 9/8/2017.
+ * Created by jyin on 10/27/2017.
  */
 
-public class ListItem {
-    public String itemName;
+public class List {
+    public String listName;
     public String addedBy;
     public String addedDate;
 
-    public String getItemName() {
-        return itemName;
+    public String getListName() {
+        return listName;
     }
 
-    public void setItemName(String itemName) {
-        this.itemName = itemName;
+    public void setListName(String listName) {
+        this.listName = listName;
     }
 
     public String getAddedBy() {
