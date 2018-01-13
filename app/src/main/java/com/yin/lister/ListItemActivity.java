@@ -55,8 +55,9 @@ public class ListItemActivity extends AppCompatActivity {
             public void onClick(View view) {
                 EditText newItem = (EditText) findViewById(R.id.new_item_text);
                 if (newItem.getText() != null && !"".equals(newItem.getText().toString().trim())) {
-                    Log.d("LISTER:", "Adding [" + newItem.getText().toString() + "] due to manual add");
-                    addToList(newItem.getText().toString());
+                    String str = newItem.getText().toString();
+                    Log.d("LISTER:", "Adding [" + str + "] due to manual add");
+                    addToList(str);
                 }
                 newItem.setText("");
             }
@@ -99,9 +100,9 @@ public class ListItemActivity extends AppCompatActivity {
         listRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
-                Log.d("LISTER:", "Adding [" + dataSnapshot.getValue(ListItem.class).getItemName() + "] to table due to firebase add");
-                adapter.add(dataSnapshot.getValue(ListItem.class).getItemName());
-                Toast.makeText(getApplicationContext(), "Added " + dataSnapshot.getValue(ListItem.class).getItemName(), Toast.LENGTH_SHORT).show();
+                String str = dataSnapshot.getValue(ListItem.class).getItemName();
+                Log.d("LISTER:", "Adding [" + str + "] to table due to firebase add");
+                adapter.add(str);
             }
 
             @Override
@@ -140,6 +141,8 @@ public class ListItemActivity extends AppCompatActivity {
         item.setAddedBy(FirebaseAuth.getInstance().getCurrentUser().getEmail());
 
         listRef.child(str).setValue(item);
+
+        Toast.makeText(getApplicationContext(), "Added " + str, Toast.LENGTH_SHORT).show();
     }
 
 }
