@@ -2,11 +2,9 @@ package com.yin.lister;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -45,7 +43,7 @@ public class ListItemActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+        dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         final ListView itemsView = (ListView) findViewById(R.id.items);
         final ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, android.R.id.text1);
@@ -58,7 +56,7 @@ public class ListItemActivity extends AppCompatActivity {
                 EditText newItem = (EditText) findViewById(R.id.new_item_text);
                 if (newItem.getText() != null && !"".equals(newItem.getText().toString().trim())) {
                     String str = newItem.getText().toString();
-                    try { URLEncoder.encode(str, "UTF-8"); } catch (Exception e) {}
+                    try { URLEncoder.encode(str, "UTF-8"); } catch (Exception e) { /* Ignore failure */ }
                     Log.d("LISTER:", "Adding [" + str + "] due to manual add");
                     addToList(str);
                 }
@@ -73,8 +71,6 @@ public class ListItemActivity extends AppCompatActivity {
 
                 Query myQuery = listRef.orderByKey().equalTo((String)
                         itemsView.getItemAtPosition(position));
-
-                final int pos = position;
 
                 myQuery.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -100,11 +96,20 @@ public class ListItemActivity extends AppCompatActivity {
         listRef = FirebaseDatabase.getInstance().getReference(title + "/listItems");
 
         // Add listener to sync the firebase db with the listview
-        listRef.addChildEventListener(new ChildEventListener() {
+        addChildEventListener("addedDate", adapter);
+    }
+
+    /**
+     * Add a child event listener to the array that sorts by the @childSortAttr
+     * @param childSortAttr Name of the attribute to sort by
+     * @param adapter Array Adapter object
+     */
+    private void addChildEventListener(String childSortAttr, final ArrayAdapter<String> adapter) {
+        listRef.orderByChild(childSortAttr).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
                 String str = dataSnapshot.getValue(ListItem.class).getItemName();
-                try { str = URLDecoder.decode(str, "UTF-8"); } catch (Exception e) {}
+                try { str = URLDecoder.decode(str, "UTF-8"); } catch (Exception e) { /* ignore failure */}
                 Log.d("LISTER:", "Adding [" + str + "] to table due to firebase add");
                 adapter.add(str);
             }

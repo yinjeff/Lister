@@ -1,6 +1,5 @@
 package com.yin.lister;
 
-import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.os.Bundle;
@@ -23,7 +22,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.yin.lister.obj.List;
-import com.yin.lister.obj.ListItem;
 
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -44,9 +42,7 @@ public class ListActivity extends AppCompatActivity {
         final ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, android.R.id.text1);
         listsView.setAdapter(adapter);
 
-        /**
-         * On clicking the FAB, create a new list
-         */
+        // On clicking the FAB, create a new list
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -54,17 +50,16 @@ public class ListActivity extends AppCompatActivity {
                 EditText newItem = (EditText) findViewById(R.id.new_item_text);
                 if (newItem.getText() != null && !"".equals(newItem.getText().toString().trim())) {
                     String str = newItem.getText().toString();
-                    try { str = URLEncoder.encode(str, "UTF-8"); } catch (Exception e) {}
+                    try { str = URLEncoder.encode(str, "UTF-8"); } catch (Exception e) { /* Ignore failure */ }
                     Log.d("LISTER:", "Adding list named [" + str + "] due to manual add");
                     addToList(str);
+                    Toast.makeText(getApplicationContext(), "Added list named " + str, Toast.LENGTH_SHORT).show();
                 }
                 newItem.setText("");
             }
         });
 
-        /**
-         * On click, open the list in the ListItem activity
-         */
+        // On click, open the list in the ListItem activity
         listsView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             public void onItemClick(AdapterView<?> parent, View view,
@@ -72,8 +67,6 @@ public class ListActivity extends AppCompatActivity {
 
                 Query myQuery = listRef.orderByKey().equalTo((String)
                         listsView.getItemAtPosition(position));
-
-                final int pos = position;
 
                 myQuery.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -101,9 +94,7 @@ public class ListActivity extends AppCompatActivity {
             }
         });
 
-        /**
-         * On long click, delete the list
-         */
+        // On long click, delete the list
         listsView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 
             public boolean onItemLongClick(AdapterView<?> parent, View view,
@@ -111,9 +102,6 @@ public class ListActivity extends AppCompatActivity {
 
                 Query myQuery = listRef.orderByKey().equalTo((String)
                         listsView.getItemAtPosition(position));
-
-                final int pos = position;
-
                 myQuery.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -140,17 +128,14 @@ public class ListActivity extends AppCompatActivity {
         listRef = FirebaseDatabase.getInstance().getReference();
         listRef = listRef.getRoot();
 
-        /**
-         * Add listener to sync the firebase db with the listview
-          */
+        // Add listener to sync the firebase db with the listview
         listRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
                 String str = dataSnapshot.getValue(List.class).getListName();
-                try { str = URLDecoder.decode(str, "UTF-8"); } catch (Exception e) {}
+                try { str = URLDecoder.decode(str, "UTF-8"); } catch (Exception e) { /* Ignore failure */ }
                 Log.d("LISTER:", "Adding [" + str + "] to table due to firebase add");
                 adapter.add(str);
-                Toast.makeText(getApplicationContext(), "Added list named " + str, Toast.LENGTH_SHORT).show();
             }
 
             @Override
