@@ -23,7 +23,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.yin.lister.obj.List;
+import com.yin.lister.obj.ListItem;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -50,8 +53,10 @@ public class ListActivity extends AppCompatActivity {
             public void onClick(View view) {
                 EditText newItem = (EditText) findViewById(R.id.new_item_text);
                 if (newItem.getText() != null && !"".equals(newItem.getText().toString().trim())) {
-                    Log.d("LISTER:", "Adding list named [" + newItem.getText().toString() + "] due to manual add");
-                    addToList(newItem.getText().toString());
+                    String str = newItem.getText().toString();
+                    try { str = URLEncoder.encode(str, "UTF-8"); } catch (Exception e) {}
+                    Log.d("LISTER:", "Adding list named [" + str + "] due to manual add");
+                    addToList(str);
                 }
                 newItem.setText("");
             }
@@ -141,9 +146,11 @@ public class ListActivity extends AppCompatActivity {
         listRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
-                Log.d("LISTER:", "Adding [" + dataSnapshot.getValue(List.class).getListName() + "] to table due to firebase add");
-                adapter.add(dataSnapshot.getValue(List.class).getListName());
-                Toast.makeText(getApplicationContext(), "Added list named " + dataSnapshot.getValue(List.class).getListName(), Toast.LENGTH_SHORT).show();
+                String str = dataSnapshot.getValue(List.class).getListName();
+                try { str = URLDecoder.decode(str, "UTF-8"); } catch (Exception e) {}
+                Log.d("LISTER:", "Adding [" + str + "] to table due to firebase add");
+                adapter.add(str);
+                Toast.makeText(getApplicationContext(), "Added list named " + str, Toast.LENGTH_SHORT).show();
             }
 
             @Override

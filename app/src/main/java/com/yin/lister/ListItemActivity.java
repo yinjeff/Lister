@@ -24,6 +24,8 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.yin.lister.obj.ListItem;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -56,6 +58,7 @@ public class ListItemActivity extends AppCompatActivity {
                 EditText newItem = (EditText) findViewById(R.id.new_item_text);
                 if (newItem.getText() != null && !"".equals(newItem.getText().toString().trim())) {
                     String str = newItem.getText().toString();
+                    try { URLEncoder.encode(str, "UTF-8"); } catch (Exception e) {}
                     Log.d("LISTER:", "Adding [" + str + "] due to manual add");
                     addToList(str);
                 }
@@ -101,6 +104,7 @@ public class ListItemActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
                 String str = dataSnapshot.getValue(ListItem.class).getItemName();
+                try { str = URLDecoder.decode(str, "UTF-8"); } catch (Exception e) {}
                 Log.d("LISTER:", "Adding [" + str + "] to table due to firebase add");
                 adapter.add(str);
             }
