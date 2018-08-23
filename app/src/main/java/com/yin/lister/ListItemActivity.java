@@ -12,7 +12,6 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -22,29 +21,23 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.yin.lister.obj.ListItem;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 public class ListItemActivity extends AppCompatActivity {
     private DatabaseReference listRef;
-    private SimpleDateFormat dateFormat;
-    private String decodedTitle;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_item);
 
         String title = getIntent().getExtras().getString("listName");
-        decodedTitle = Utilities.unescapeJSONString(title);
 
-        setTitle(decodedTitle);
+        setTitle(Utilities.unescapeJSONString(title));
 
         // Add the back button
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         final ListView itemsView = (ListView) findViewById(R.id.items);
         final ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, android.R.id.text1);
@@ -56,9 +49,11 @@ public class ListItemActivity extends AppCompatActivity {
             public void onClick(View view) {
                 EditText newItem = (EditText) findViewById(R.id.new_item_text);
                 if (newItem.getText() != null && !"".equals(newItem.getText().toString().trim())) {
-                    String str = Utilities.escapeJSONString(newItem.getText().toString());
+                    String str = newItem.getText().toString();
                     Log.d("LISTER:", "Adding [" + str + "] due to manual add");
-                    addToList(str);
+
+                    listRef.child(Utilities.escapeJSONString(str)).setValue(Utilities.getListItem(str));
+                    Toast.makeText(getApplicationContext(), "Added " + str, Toast.LENGTH_SHORT).show();
                 }
                 newItem.setText("");
             }
@@ -136,21 +131,6 @@ public class ListItemActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Adds the string to the Firebase list
-     * @param str Value to add to firebase list
-     */
-    private void addToList(String str) {
-        Log.d("LISTER:", "Adding [" + str + "] to list");
 
-        ListItem item = new ListItem();
-        item.setItemName(str);
-        item.setAddedDate(dateFormat.format(new Date()));
-        item.setAddedBy(FirebaseAuth.getInstance().getCurrentUser().getEmail());
-
-        listRef.child(str).setValue(item);
-
-        Toast.makeText(getApplicationContext(), "Added " + str, Toast.LENGTH_SHORT).show();
-    }
 
 }

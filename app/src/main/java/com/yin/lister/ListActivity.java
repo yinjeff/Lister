@@ -13,7 +13,6 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -23,18 +22,13 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.yin.lister.obj.List;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 public class ListActivity extends AppCompatActivity {
     private DatabaseReference listRef;
-    private SimpleDateFormat dateFormat;
     private final TaskStackBuilder taskStack = TaskStackBuilder.create(this);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_item);
-        dateFormat = new SimpleDateFormat("MM/dd/yyyy");
 
         final ListView listsView = (ListView) findViewById(R.id.items);
         final ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, android.R.id.text1);
@@ -49,7 +43,7 @@ public class ListActivity extends AppCompatActivity {
                 if (newItem.getText() != null && !"".equals(newItem.getText().toString().trim())) {
                     String str = newItem.getText().toString();
                     Log.d("LISTER:", "Adding list named [" + str + "] due to manual add");
-                    addToList(Utilities.escapeJSONString(str));
+                    listRef.child(Utilities.escapeJSONString(str)).setValue(Utilities.getListObject(str));
                     Toast.makeText(getApplicationContext(), "Added list named " + str, Toast.LENGTH_SHORT).show();
                 }
                 newItem.setText("");
@@ -154,22 +148,6 @@ public class ListActivity extends AppCompatActivity {
                 Log.e("TAG:", "Failed to read value.", error.toException());
             }
         });
-    }
-
-    /**
-     * Adds the string to the Firebase list
-     * @param str Value to add to firebase list
-     */
-    private void addToList(String str) {
-        str = Utilities.escapeJSONString(str);
-        Log.d("LISTER:", "Adding list named [" + str + "]");
-
-        List list = new List();
-        list.setListName(str);
-        list.setAddedDate(dateFormat.format(new Date()));
-        list.setAddedBy(FirebaseAuth.getInstance().getCurrentUser().getEmail());
-
-        listRef.child(str).setValue(list);
     }
 
 }

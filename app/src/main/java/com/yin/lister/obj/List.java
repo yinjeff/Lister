@@ -9,8 +9,6 @@ public class List {
     public String addedBy;
     public String addedDate;
 
-//    public ListItem[] listItems;
-
     public String getListName() {
         return listName;
     }
@@ -35,11 +33,4 @@ public class List {
         this.addedDate = addedDate;
     }
 
-//    public ListItem[] getListItems() {
-//        return listItems;
-//    }
-//
-//    public void setListItems(ListItem[] listItems) {
-//        this.listItems = listItems;
-//    }
 }
