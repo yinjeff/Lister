@@ -23,8 +23,6 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.yin.lister.obj.List;
 
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -50,9 +48,8 @@ public class ListActivity extends AppCompatActivity {
                 EditText newItem = (EditText) findViewById(R.id.new_item_text);
                 if (newItem.getText() != null && !"".equals(newItem.getText().toString().trim())) {
                     String str = newItem.getText().toString();
-                    try { str = URLEncoder.encode(str, "UTF-8"); } catch (Exception e) { /* Ignore failure */ }
                     Log.d("LISTER:", "Adding list named [" + str + "] due to manual add");
-                    addToList(str);
+                    addToList(Utilities.escapeJSONString(str));
                     Toast.makeText(getApplicationContext(), "Added list named " + str, Toast.LENGTH_SHORT).show();
                 }
                 newItem.setText("");
@@ -77,7 +74,7 @@ public class ListActivity extends AppCompatActivity {
                             Log.d("LISTER:", "Opening list named [" + list.getListName() + "] from firebase db due to click");
 
                             Intent itemIntent = new Intent(ListActivity.this, ListItemActivity.class);
-                            itemIntent.putExtra("listName", list.getListName());
+                            itemIntent.putExtra("listName", Utilities.escapeJSONString(list.getListName()));
 
                             // Use TaskStackBuilder to build the back stack and get the PendingIntent
                             taskStack.addNextIntentWithParentStack(itemIntent);
@@ -100,8 +97,8 @@ public class ListActivity extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> parent, View view,
                                            int position, long id) {
 
-                Query myQuery = listRef.orderByKey().equalTo((String)
-                        listsView.getItemAtPosition(position));
+                Query myQuery = listRef.orderByKey().equalTo(
+                        Utilities.escapeJSONString((String)listsView.getItemAtPosition(position)));
                 myQuery.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -109,7 +106,6 @@ public class ListActivity extends AppCompatActivity {
                             DataSnapshot firstChild = dataSnapshot.getChildren().iterator().next();
                             List list = firstChild.getValue(List.class);
                             // TODO: Confirmation with user that they want to delete this list
-
                             Log.d("LISTER:", "Removing list named [" + list.getListName() + "] from firebase db due to long click");
                             firstChild.getRef().removeValue();
                         }
@@ -132,8 +128,7 @@ public class ListActivity extends AppCompatActivity {
         listRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
-                String str = dataSnapshot.getValue(List.class).getListName();
-                try { str = URLDecoder.decode(str, "UTF-8"); } catch (Exception e) { /* Ignore failure */ }
+                String str = Utilities.unescapeJSONString(dataSnapshot.getValue(List.class).getListName());
                 Log.d("LISTER:", "Adding [" + str + "] to table due to firebase add");
                 adapter.add(str);
             }
@@ -143,10 +138,10 @@ public class ListActivity extends AppCompatActivity {
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                Log.d("LISTER:", "Removing [" + dataSnapshot.getValue(List.class).getListName() + "] from table due to firebase remove");
-                String value = dataSnapshot.getValue(List.class).getListName();
+                String value = Utilities.unescapeJSONString(dataSnapshot.getValue(List.class).getListName());
+                Log.d("LISTER:", "Removing [" + value + "] from table due to firebase remove");
                 adapter.remove(value);
-                Toast.makeText(getApplicationContext(), "Removed list named " + dataSnapshot.getValue(List.class).getListName(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Removed list named " + value, Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -166,6 +161,7 @@ public class ListActivity extends AppCompatActivity {
      * @param str Value to add to firebase list
      */
     private void addToList(String str) {
+        str = Utilities.escapeJSONString(str);
         Log.d("LISTER:", "Adding list named [" + str + "]");
 
         List list = new List();

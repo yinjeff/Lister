@@ -22,21 +22,22 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.yin.lister.obj.ListItem;
 
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class ListItemActivity extends AppCompatActivity {
     private DatabaseReference listRef;
     private SimpleDateFormat dateFormat;
+    private String decodedTitle;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_item);
 
         String title = getIntent().getExtras().getString("listName");
-        setTitle(title);
+        decodedTitle = Utilities.unescapeJSONString(title);
+
+        setTitle(decodedTitle);
 
         // Add the back button
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -55,8 +56,7 @@ public class ListItemActivity extends AppCompatActivity {
             public void onClick(View view) {
                 EditText newItem = (EditText) findViewById(R.id.new_item_text);
                 if (newItem.getText() != null && !"".equals(newItem.getText().toString().trim())) {
-                    String str = newItem.getText().toString();
-                    try { URLEncoder.encode(str, "UTF-8"); } catch (Exception e) { /* Ignore failure */ }
+                    String str = Utilities.escapeJSONString(newItem.getText().toString());
                     Log.d("LISTER:", "Adding [" + str + "] due to manual add");
                     addToList(str);
                 }
@@ -69,8 +69,8 @@ public class ListItemActivity extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> parent, View view,
                                     int position, long id) {
 
-                Query myQuery = listRef.orderByKey().equalTo((String)
-                        itemsView.getItemAtPosition(position));
+                Query myQuery = listRef.orderByKey().equalTo(Utilities.escapeJSONString((String)
+                        itemsView.getItemAtPosition(position)));
 
                 myQuery.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -108,8 +108,7 @@ public class ListItemActivity extends AppCompatActivity {
         listRef.orderByChild(childSortAttr).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
-                String str = dataSnapshot.getValue(ListItem.class).getItemName();
-                try { str = URLDecoder.decode(str, "UTF-8"); } catch (Exception e) { /* ignore failure */}
+                String str = Utilities.unescapeJSONString(dataSnapshot.getValue(ListItem.class).getItemName());
                 Log.d("LISTER:", "Adding [" + str + "] to table due to firebase add");
                 adapter.add(str);
             }
@@ -119,10 +118,10 @@ public class ListItemActivity extends AppCompatActivity {
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                Log.d("LISTER:", "Removing [" + dataSnapshot.getValue(ListItem.class).getItemName() + "] from table due to firebase remove");
-                String value = dataSnapshot.getValue(ListItem.class).getItemName();
+                String value = Utilities.unescapeJSONString(dataSnapshot.getValue(ListItem.class).getItemName());
+                Log.d("LISTER:", "Removing [" + value + "] from table due to firebase remove");
                 adapter.remove(value);
-                Toast.makeText(getApplicationContext(), "Removed " + dataSnapshot.getValue(ListItem.class).getItemName(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Removed " + value, Toast.LENGTH_SHORT).show();
             }
 
             @Override
