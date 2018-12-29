@@ -23,16 +23,15 @@ import com.yin.lister.obj.ListItem;
 
 public class ListItemActivity extends AppCompatActivity {
     private DatabaseReference listRef;
+    private String listName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_item);
 
-        String title = getIntent().getExtras().getString("listName");
-
-        setTitle(Utilities.unescapeJSONString(title));
-
+        listName = Utilities.unescapeJSONString(getIntent().getExtras().getString("listName"));
+        updateTitle(0);
         // Add the back button
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -88,7 +87,7 @@ public class ListItemActivity extends AppCompatActivity {
         });
 
         // attach listener for changes to list
-        listRef = FirebaseDatabase.getInstance().getReference(title + "/listItems");
+        listRef = FirebaseDatabase.getInstance().getReference(listName + "/listItems");
 
         // Add listener to sync the firebase db with the listview
         addChildEventListener("addedDate", adapter);
@@ -106,6 +105,7 @@ public class ListItemActivity extends AppCompatActivity {
                 String str = Utilities.unescapeJSONString(dataSnapshot.getValue(ListItem.class).getItemName());
                 Log.d("LISTER:", "Adding [" + str + "] to table due to firebase add");
                 adapter.add(str);
+                updateTitle(adapter.getCount());
             }
 
             @Override
@@ -117,6 +117,7 @@ public class ListItemActivity extends AppCompatActivity {
                 Log.d("LISTER:", "Removing [" + value + "] from table due to firebase remove");
                 adapter.remove(value);
                 Toast.makeText(getApplicationContext(), "Removed " + value, Toast.LENGTH_SHORT).show();
+                updateTitle(adapter.getCount());
             }
 
             @Override
@@ -131,6 +132,8 @@ public class ListItemActivity extends AppCompatActivity {
         });
     }
 
-
+    private void updateTitle(int count) {
+        setTitle(listName + (count > 0?" (" + count + ")":""));
+    }
 
 }
